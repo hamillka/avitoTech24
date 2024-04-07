@@ -1,0 +1,12 @@
+*.exe
+*.test
+
+*.out
+
+go.work
+
+.idea/
+
+.DS_Store
+
+
