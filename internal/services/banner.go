@@ -6,9 +6,9 @@ import (
 )
 
 type IBannerRepository interface {
-	GetBannersByFeature(featureId, limit, offset int64) ([]*repoModels.Banner, map[int64][]int64, error)
-	GetBannersByTag(tagId, limit, offset int64) ([]*repoModels.Banner, map[int64][]int64, error)
-	GetBannerByFeatureAndTag(featureId, tagId, limit, offset int64) (*repoModels.Banner, error)
+	GetBannersByFeature(featureID, limit, offset int64) ([]*repoModels.Banner, map[int64][]int64, error)
+	GetBannersByTag(tagID, limit, offset int64) ([]*repoModels.Banner, map[int64][]int64, error)
+	GetBannerByFeatureAndTag(featureID, tagID, limit, offset int64) (*repoModels.Banner, error)
 }
 
 type BannerService struct {
@@ -20,25 +20,46 @@ func NewBannerService(repository IBannerRepository) *BannerService {
 }
 
 func (bs *BannerService) GetBannersByFeature(featureID, limit, offset int64) ([]*serviceModels.BannerWithTagIDs, error) {
-	banners, tagIds, err := bs.repo.GetBannersByFeature(featureID, limit, offset)
+	banners, tagIDs, err := bs.repo.GetBannersByFeature(featureID, limit, offset)
 	if err != nil {
-		//
+		return nil, err
 	}
 
 	bannersWithTags := make([]*serviceModels.BannerWithTagIDs, 0)
 
 	for _, banner := range banners {
-		bannersWithTags = append(bannersWithTags, serviceModels.ConvertToBL(*banner, tagIds))
-
+		bannersWithTags = append(bannersWithTags, serviceModels.ConvertToBL(*banner, tagIDs))
 	}
 
 	return bannersWithTags, nil
 }
 
 func (bs *BannerService) GetBannersByTag(tagID, limit, offset int64) ([]*serviceModels.BannerWithTagIDs, error) {
-	return nil, nil
+	banners, tagIDs, err := bs.repo.GetBannersByTag(tagID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	bannersWithTags := make([]*serviceModels.BannerWithTagIDs, 0)
+
+	for _, banner := range banners {
+		bannersWithTags = append(bannersWithTags, serviceModels.ConvertToBL(*banner, tagIDs))
+	}
+
+	return bannersWithTags, nil
 }
 
 func (bs *BannerService) GetBannersByFeatureAndTag(featureID, tagID, limit, offset int64) ([]*serviceModels.BannerWithTagIDs, error) {
-	return nil, nil
+	banner, err := bs.repo.GetBannerByFeatureAndTag(featureID, tagID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	bannersWithTags := make([]*serviceModels.BannerWithTagIDs, 1)
+
+	bannersWithTags[0] = serviceModels.ConvertToBL(*banner, map[int64][]int64{
+		banner.BannerID: {tagID},
+	})
+
+	return bannersWithTags, nil
 }

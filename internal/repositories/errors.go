@@ -5,8 +5,8 @@ import (
 )
 
 var (
-	ErrRecordNotFound       = goErrors.New("Record was not found")
-	ErrDatabaseWritingError = goErrors.New("Error while writing to DB")
-	ErrDatabaseReadingError = goErrors.New("Error while reading from DB")
-	ErrRecordAlreadyExists  = goErrors.New("Record with this data already exists")
+	ErrRecordNotFound       = goErrors.New("record was not found")
+	ErrDatabaseWritingError = goErrors.New("error while writing to DB")
+	ErrDatabaseReadingError = goErrors.New("error while reading from DB")
+	ErrRecordAlreadyExists  = goErrors.New("record with this data already exists")
 )

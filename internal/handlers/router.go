@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/swaggo/http-swagger"
 )
 
 func Router() *mux.Router {
