@@ -17,7 +17,7 @@ type BannerRepository struct {
 const (
 	selectBannersByFeature      = "SELECT * FROM banners WHERE feature_id = $1 LIMIT $2 OFFSET $3"
 	selectBannerByID            = "SELECT * FROM banners WHERE banner_id = $1"
-	selectBannerByFeatureAndTag = "SELECT (b.banner_id, b.feature_id, b.content, b.is_active, b.created_at, b.updated_at) FROM banners b JOIN bt ON b.banner_id = bt.banner_id WHERE b.feature_id = $1 AND bt.tag_id = $2 LIMIT $3 OFFSET $4"
+	selectBannerByFeatureAndTag = "SELECT (b.banner_id, b.feature_id, b.content, b.is_active, b.created_at, b.updated_at) FROM banners b JOIN bt ON b.banner_id = bt.banner_id WHERE b.feature_id = $1 AND bt.tag_id = $2"
 	selectTagsByBanner          = "SELECT tag_id FROM bt WHERE banner_id = $1"
 	selectBannersByTag          = "SELECT banner_id FROM bt WHERE tag_id = $1 LIMIT $2 OFFSET $3"
 	createBanner                = "INSERT INTO banners (feature_id, content, is_active) VALUES ($1, $2, $3) RETURNING banner_id"
@@ -123,10 +123,10 @@ func (br *BannerRepository) GetBannersByTag(tagID, limit, offset int64) ([]*repo
 	return banners, bannerTagMap, nil
 }
 
-func (br *BannerRepository) GetBannerByFeatureAndTag(featureID, tagID, limit, offset int64) (*repoModels.Banner, error) {
+func (br *BannerRepository) GetBannerByFeatureAndTag(featureID, tagID int64) (*repoModels.Banner, error) {
 	banner := new(repoModels.Banner)
 
-	err := br.db.QueryRow(selectBannerByFeatureAndTag, featureID, tagID, limit, offset).Scan(
+	err := br.db.QueryRow(selectBannerByFeatureAndTag, featureID, tagID).Scan(
 		&banner.BannerID,
 		&banner.FeatureID,
 		&banner.Content,

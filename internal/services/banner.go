@@ -10,7 +10,7 @@ import (
 type IBannerRepository interface {
 	GetBannersByFeature(featureID, limit, offset int64) ([]*repoModels.Banner, map[int64][]int64, error)
 	GetBannersByTag(tagID, limit, offset int64) ([]*repoModels.Banner, map[int64][]int64, error)
-	GetBannerByFeatureAndTag(featureID, tagID, limit, offset int64) (*repoModels.Banner, error)
+	GetBannerByFeatureAndTag(featureID, tagID int64) (*repoModels.Banner, error)
 	CreateBanner(featureID int64, content string, isActive bool) (int64, error)
 	UpdateBanner(bannerID, featureID int64, content string, isActive *bool) (int64, error)
 	DeleteBanner(bannerID int64) error
@@ -84,8 +84,8 @@ func (bs *BannerService) GetBannersByTag(tagID, limit, offset int64) ([]*service
 	return bannersWithTags, nil
 }
 
-func (bs *BannerService) GetBannersByFeatureAndTag(featureID, tagID, limit, offset int64) ([]*serviceModels.BannerWithTagIDs, error) {
-	banner, err := bs.bannerRepo.GetBannerByFeatureAndTag(featureID, tagID, limit, offset)
+func (bs *BannerService) GetBannersByFeatureAndTag(featureID, tagID int64) ([]*serviceModels.BannerWithTagIDs, error) {
+	banner, err := bs.bannerRepo.GetBannerByFeatureAndTag(featureID, tagID)
 	if err != nil {
 		return nil, err
 	}
@@ -164,4 +164,13 @@ func (bs *BannerService) DeleteBanner(bannerID int64) error {
 	}
 
 	return nil
+}
+
+func (bs *BannerService) GetBannerContentByFeatureAndTag(featureID, tagID int64) (string, error) {
+	banner, err := bs.bannerRepo.GetBannerByFeatureAndTag(featureID, tagID)
+	if err != nil {
+		return "", err
+	}
+
+	return banner.Content, nil
 }

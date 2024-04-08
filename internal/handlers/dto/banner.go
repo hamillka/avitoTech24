@@ -27,6 +27,10 @@ type GetBannersResponseDto struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type GetUserBannerResponseDto struct {
+	Content string `json:"content"`
+}
+
 func ConvertToDto(banner models.BannerWithTagIDs) *GetBannersResponseDto {
 	return &GetBannersResponseDto{
 		BannerID:  banner.BannerID,
