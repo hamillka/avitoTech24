@@ -1,6 +1,11 @@
 package repositories
 
 import (
+	"database/sql"
+	"errors"
+	"time"
+
+	"github.com/AlekSi/pointer"
 	repoModels "github.com/hamillka/avitoTech24/internal/repositories/models"
 	"github.com/jmoiron/sqlx"
 )
@@ -11,10 +16,13 @@ type BannerRepository struct {
 
 const (
 	selectBannersByFeature      = "SELECT * FROM banners WHERE feature_id = $1 LIMIT $2 OFFSET $3"
-	selectBannersByID           = "SELECT * FROM banners WHERE banner_id = $1 LIMIT $2 OFFSET $3"
+	selectBannerByID            = "SELECT * FROM banners WHERE banner_id = $1"
 	selectBannerByFeatureAndTag = "SELECT (b.banner_id, b.feature_id, b.content, b.is_active, b.created_at, b.updated_at) FROM banners b JOIN bt ON b.banner_id = bt.banner_id WHERE b.feature_id = $1 AND bt.tag_id = $2 LIMIT $3 OFFSET $4"
 	selectTagsByBanner          = "SELECT tag_id FROM bt WHERE banner_id = $1"
-	selectBannersByTag          = "SELECT banner_id FROM bt WHERE tag_id = $1"
+	selectBannersByTag          = "SELECT banner_id FROM bt WHERE tag_id = $1 LIMIT $2 OFFSET $3"
+	createBanner                = "INSERT INTO banners (feature_id, content, is_active) VALUES ($1, $2, $3) RETURNING banner_id"
+	updateBanner                = "UPDATE banners SET feature_id = $1, content = $2, is_active = $3, updated_at = $4 WHERE banner_id = $5"
+	deleteBannerByID            = "DELETE FROM banners WHERE banner_id = $1"
 )
 
 func NewBannerRepository(db *sqlx.DB) *BannerRepository {
@@ -72,7 +80,7 @@ func (br *BannerRepository) GetBannersByFeature(featureID, limit, offset int64) 
 func (br *BannerRepository) GetBannersByTag(tagID, limit, offset int64) ([]*repoModels.Banner, map[int64][]int64, error) {
 	var banners []*repoModels.Banner
 
-	rows, err := br.db.Query(selectBannersByTag, tagID)
+	rows, err := br.db.Query(selectBannersByTag, tagID, limit, offset)
 	if err != nil {
 		return nil, nil, ErrDatabaseReadingError
 	}
@@ -98,7 +106,7 @@ func (br *BannerRepository) GetBannersByTag(tagID, limit, offset int64) ([]*repo
 		bannerTagMap[bannerID] = []int64{tagID}
 
 		banner := new(repoModels.Banner)
-		err = br.db.QueryRow(selectBannersByID, bannerID).Scan(
+		err = br.db.QueryRow(selectBannerByID, bannerID).Scan(
 			&banner.BannerID,
 			&banner.FeatureID,
 			&banner.Content,
@@ -132,4 +140,69 @@ func (br *BannerRepository) GetBannerByFeatureAndTag(featureID, tagID, limit, of
 	}
 
 	return banner, nil
+}
+
+func (br *BannerRepository) CreateBanner(featureID int64, content string, isActive bool) (int64, error) {
+	var id int64
+
+	row := br.db.QueryRow(createBanner, featureID, content, isActive)
+	if err := row.Scan(&id); err != nil {
+		return 0, ErrDatabaseWritingError
+	}
+
+	return 0, nil
+}
+
+func (br *BannerRepository) UpdateBanner(bannerID, featureID int64, content string, isActive *bool) (int64, error) {
+	banner := new(repoModels.Banner)
+
+	err := br.db.QueryRow(selectBannerByID, bannerID).Scan(
+		&banner.BannerID,
+		&banner.FeatureID,
+		&banner.Content,
+		&banner.IsActive,
+		&banner.CreatedAt,
+		&banner.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, ErrRecordNotFound
+		}
+		return 0, err
+	}
+
+	if featureID == 0 {
+		featureID = banner.FeatureID
+	}
+	if content == "" {
+		content = banner.Content
+	}
+	if isActive == nil {
+		isActive = pointer.ToBool(banner.IsActive)
+	}
+
+	_, err = br.db.Exec(updateBanner,
+		featureID,
+		content,
+		isActive,
+		time.Now().Format(time.RFC3339),
+		banner.BannerID,
+	)
+	if err != nil {
+		return 0, ErrDatabaseUpdatingError
+	}
+
+	return banner.BannerID, nil
+}
+
+func (br *BannerRepository) DeleteBanner(bannerID int64) error {
+	_, err := br.db.Exec(deleteBannerByID, bannerID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrRecordNotFound
+		}
+		return err
+	}
+
+	return nil
 }

@@ -10,7 +10,11 @@ type CreateOrUpdateBannerRequestDto struct {
 	TagIDs    []int64 `json:"tag_ids"`
 	FeatureID int64   `json:"feature_id"`
 	Content   string  `json:"content"`
-	IsActive  bool    `json:"is_active"`
+	IsActive  *bool   `json:"is_active"`
+}
+
+type CreateOrUpdateBannerResponseDto struct {
+	ID int64 `json:"id"`
 }
 
 type GetBannersResponseDto struct {
