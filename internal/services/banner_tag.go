@@ -1,8 +1,5 @@
 package services
 
-type IBannerTagRepository interface {
-}
-
 type BannerTagService struct {
 	repo IBannerTagRepository
 }

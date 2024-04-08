@@ -1,8 +1,5 @@
 package services
 
-type IFeatureRepository interface {
-}
-
 type FeatureService struct {
 	repo IFeatureRepository
 }

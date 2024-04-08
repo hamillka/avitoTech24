@@ -2,19 +2,25 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/hamillka/avitoTech24/internal/handlers/dto"
+	"github.com/hamillka/avitoTech24/internal/repositories"
 	"github.com/hamillka/avitoTech24/internal/services/models"
 )
+
+var ErrValidate = errors.New("validation error")
 
 type IBannerService interface {
 	GetBannersByFeature(featureID, limit, offset int64) ([]*models.BannerWithTagIDs, error)
 	GetBannersByTag(tagID, limit, offset int64) ([]*models.BannerWithTagIDs, error)
 	GetBannersByFeatureAndTag(featureID, tagID, limit, offset int64) ([]*models.BannerWithTagIDs, error)
+	CreateBanner(tagIDs []int64, featureID int64, content string, isActive bool) (int64, error)
+	UpdateBanner(bannerID int64, tagIDs []int64, featureID int64, content string, isActive *bool) (int64, error)
+	DeleteBanner(bannerID int64) error
 }
 
 type BannerHandler struct {
@@ -28,7 +34,7 @@ func (bh *BannerHandler) GetBanners(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		errorDto := &dto.ErrorDto{
-			Error: "Возникла внутренняя ошибка",
+			Error: "Некорректные данные",
 		}
 		err = json.NewEncoder(w).Encode(errorDto)
 		if err != nil {
@@ -41,7 +47,7 @@ func (bh *BannerHandler) GetBanners(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		errorDto := &dto.ErrorDto{
-			Error: "Возникла внутренняя ошибка",
+			Error: "Некорректные данные",
 		}
 		err = json.NewEncoder(w).Encode(errorDto)
 		if err != nil {
@@ -54,7 +60,7 @@ func (bh *BannerHandler) GetBanners(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		errorDto := &dto.ErrorDto{
-			Error: "Возникла внутренняя ошибка",
+			Error: "Некорректные данные",
 		}
 		err = json.NewEncoder(w).Encode(errorDto)
 		if err != nil {
@@ -67,7 +73,7 @@ func (bh *BannerHandler) GetBanners(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		errorDto := &dto.ErrorDto{
-			Error: "Возникла внутренняя ошибка",
+			Error: "Некорректные данные",
 		}
 		err = json.NewEncoder(w).Encode(errorDto)
 		if err != nil {
@@ -107,9 +113,17 @@ func (bh *BannerHandler) GetBanners(w http.ResponseWriter, r *http.Request) {
 	} else if featureID != 0 && tagID != 0 {
 		bannersWithTags, err = bh.service.GetBannersByFeatureAndTag(featureID, tagID, limit, offset)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			errorDto := &dto.ErrorDto{
-				Error: "Возникла внутренняя ошибка",
+			var errorDto *dto.ErrorDto
+			if errors.Is(err, repositories.ErrRecordNotFound) {
+				w.WriteHeader(http.StatusNotFound)
+				errorDto = &dto.ErrorDto{
+					Error: "Баннер не найден",
+				}
+			} else {
+				w.WriteHeader(http.StatusInternalServerError)
+				errorDto = &dto.ErrorDto{
+					Error: "Возникла внутренняя ошибка",
+				}
 			}
 			err = json.NewEncoder(w).Encode(errorDto)
 			if err != nil {
@@ -132,6 +146,158 @@ func (bh *BannerHandler) GetBanners(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (bh *BannerHandler) CreateBanner(w http.ResponseWriter, r *http.Request) {
+	var banner dto.CreateOrUpdateBannerRequestDto
+
+	w.Header().Add("Content-Type", "application/json")
+	err := json.NewDecoder(r.Body).Decode(&banner)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		errorDto := &dto.ErrorDto{
+			Error: "Некорректные данные",
+		}
+		err = json.NewEncoder(w).Encode(errorDto)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	id, err := bh.service.CreateBanner(banner.TagIDs, banner.FeatureID, banner.Content, *banner.IsActive)
+	if err != nil {
+		var errorDto *dto.ErrorDto
+		if errors.Is(err, repositories.ErrRecordNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+			errorDto = &dto.ErrorDto{
+				Error: "Запись с данным идентификатором фичи и/или тега не найдена",
+			}
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			errorDto = &dto.ErrorDto{
+				Error: "Возникла внутренняя ошибка",
+			}
+		}
+		err = json.NewEncoder(w).Encode(errorDto)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	createOrUpdateBannerResponseDto := dto.CreateOrUpdateBannerResponseDto{
+		ID: id,
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	err = json.NewEncoder(w).Encode(createOrUpdateBannerResponseDto)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+func (bh *BannerHandler) UpdateBanner(w http.ResponseWriter, r *http.Request) {
+	var banner dto.CreateOrUpdateBannerRequestDto
+	params := mux.Vars(r)
+
+	bannerID, err := getQueryParam(params, "id")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		errorDto := &dto.ErrorDto{
+			Error: "Некорректные данные",
+		}
+		err = json.NewEncoder(w).Encode(errorDto)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	err = json.NewDecoder(r.Body).Decode(&banner)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		errorDto := &dto.ErrorDto{
+			Error: "Некорректные данные",
+		}
+		err = json.NewEncoder(w).Encode(errorDto)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	id, err := bh.service.UpdateBanner(bannerID, banner.TagIDs, banner.FeatureID, banner.Content, banner.IsActive)
+	if err != nil {
+		var errorDto *dto.ErrorDto
+		if errors.Is(err, repositories.ErrRecordNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+			errorDto = &dto.ErrorDto{
+				Error: "Баннер с данным идентификатором не найден",
+			}
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			errorDto = &dto.ErrorDto{
+				Error: "Возникла внутренняя ошибка",
+			}
+		}
+		err = json.NewEncoder(w).Encode(errorDto)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	createOrUpdateBannerResponseDto := dto.CreateOrUpdateBannerResponseDto{
+		ID: id,
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	err = json.NewEncoder(w).Encode(createOrUpdateBannerResponseDto)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+func (bh *BannerHandler) DeleteBanner(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+
+	bannerID, err := getQueryParam(params, "id")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		errorDto := &dto.ErrorDto{
+			Error: "Некорректные данные",
+		}
+		err = json.NewEncoder(w).Encode(errorDto)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	err = bh.service.DeleteBanner(bannerID)
+	if err != nil {
+		var errorDto *dto.ErrorDto
+		if errors.Is(err, repositories.ErrRecordNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+			errorDto = &dto.ErrorDto{
+				Error: "Баннер с данным идентификатором не найден",
+			}
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			errorDto = &dto.ErrorDto{
+				Error: "Возникла внутренняя ошибка",
+			}
+		}
+		err = json.NewEncoder(w).Encode(errorDto)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func getQueryParam(params map[string]string, key string) (int64, error) {
 	var result int64
 	var err error
@@ -139,7 +305,7 @@ func getQueryParam(params map[string]string, key string) (int64, error) {
 	if param, exist := params[key]; exist {
 		result, err = strconv.ParseInt(param, 10, 64)
 		if err != nil {
-			return 0, fmt.Errorf("internal server error") // TODO: custom error
+			return 0, ErrValidate
 		}
 	}
 

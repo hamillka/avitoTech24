@@ -1,8 +1,5 @@
 package services
 
-type ITagRepository interface {
-}
-
 type TagService struct {
 	repo ITagRepository
 }
