@@ -7,10 +7,10 @@ import (
 )
 
 type CreateOrUpdateBannerRequestDto struct {
-	TagIDs    []int64 `json:"tag_ids"`
-	FeatureID int64   `json:"feature_id"`
-	Content   string  `json:"content"`
-	IsActive  *bool   `json:"is_active"`
+	TagIDs    []int64                `json:"tag_ids"`
+	FeatureID int64                  `json:"feature_id"`
+	Content   map[string]interface{} `json:"content"`
+	IsActive  *bool                  `json:"is_active"`
 }
 
 type CreateOrUpdateBannerResponseDto struct {

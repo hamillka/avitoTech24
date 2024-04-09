@@ -10,7 +10,7 @@ services:
       POSTGRES_DB: postgres
     volumes:
       - ./scripts/1-init.sql:/docker-entrypoint-initdb.d/1-init.sql
-#      - ./scripts/2-init-tests-db.sql:/docker-entrypoint-initdb.d/2-init-tests-db.sql
+      - ./scripts/2-init-tests-db.sql:/docker-entrypoint-initdb.d/2-init-tests-db.sql
       - db-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"

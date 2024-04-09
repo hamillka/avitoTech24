@@ -17,7 +17,7 @@ type BannerRepository struct {
 const (
 	selectBannersByFeature      = "SELECT * FROM banners WHERE feature_id = $1 LIMIT $2 OFFSET $3"
 	selectBannerByID            = "SELECT * FROM banners WHERE banner_id = $1"
-	selectBannerByFeatureAndTag = "SELECT (b.banner_id, b.feature_id, b.content, b.is_active, b.created_at, b.updated_at) FROM banners b JOIN bt ON b.banner_id = bt.banner_id WHERE b.feature_id = $1 AND bt.tag_id = $2"
+	selectBannerByFeatureAndTag = "SELECT b.banner_id, b.feature_id, b.content, b.is_active, b.created_at, b.updated_at) FROM banners b JOIN bt ON b.banner_id = bt.banner_id WHERE b.feature_id = $1 AND bt.tag_id = $2"
 	selectTagsByBanner          = "SELECT tag_id FROM bt WHERE banner_id = $1"
 	selectBannersByTag          = "SELECT banner_id FROM bt WHERE tag_id = $1 LIMIT $2 OFFSET $3"
 	createBanner                = "INSERT INTO banners (feature_id, content, is_active) VALUES ($1, $2, $3) RETURNING banner_id"
@@ -150,7 +150,7 @@ func (br *BannerRepository) CreateBanner(featureID int64, content string, isActi
 		return 0, ErrDatabaseWritingError
 	}
 
-	return 0, nil
+	return id, nil
 }
 
 func (br *BannerRepository) UpdateBanner(bannerID, featureID int64, content string, isActive *bool) (int64, error) {
