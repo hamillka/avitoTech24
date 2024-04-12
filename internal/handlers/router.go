@@ -3,7 +3,7 @@ package handlers
 import (
 	"github.com/gorilla/mux"
 	"github.com/hamillka/avitoTech24/internal/handlers/middlewares"
-	"github.com/swaggo/http-swagger"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"go.uber.org/zap"
 )
 

@@ -3,14 +3,15 @@ package middlewares
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
-
 	"github.com/hamillka/avitoTech24/internal/handlers/dto"
 )
+
+var errSigningMethod = errors.New("signing method error")
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +30,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		jwtToken := authHeader[1]
 		token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("неверный метод подписи: %v", token.Header["alg"])
+				return nil, errSigningMethod
 			}
 			return []byte("someSecretKey"), nil // HARDCODED
 		})
@@ -38,9 +39,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			ctx := context.WithValue(r.Context(), "props", claims)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
-			fmt.Printf("OK : %t valid: %t\n", ok, token.Valid)
-			lala, _ := claims.GetSubject()
-			fmt.Printf("%v\n", lala)
 			w.WriteHeader(http.StatusUnauthorized)
 			errorDto := &dto.ErrorDto{
 				Error: "Неверный токен",

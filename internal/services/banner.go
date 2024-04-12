@@ -1,16 +1,14 @@
 package services
 
 import (
-	goErrors "errors"
-
 	repoModels "github.com/hamillka/avitoTech24/internal/repositories/models"
 	serviceModels "github.com/hamillka/avitoTech24/internal/services/models"
 )
 
 type IBannerRepository interface {
-	GetBannersByFeature(featureID, limit, offset int64) ([]*repoModels.Banner, map[int64][]int64, error)
-	GetBannersByTag(tagID, limit, offset int64) ([]*repoModels.Banner, map[int64][]int64, error)
-	GetBannerByFeatureAndTag(featureID, tagID int64) (*repoModels.Banner, error)
+	GetBannersByFeature(featureID, limit, offset, role int64) ([]*repoModels.Banner, map[int64][]int64, error)
+	GetBannersByTag(tagID, limit, offset, role int64) ([]*repoModels.Banner, map[int64][]int64, error)
+	GetBannerByFeatureAndTag(featureID, tagID, role int64) (*repoModels.Banner, error)
 	CreateBanner(featureID int64, content string, isActive bool) (int64, error)
 	UpdateBanner(bannerID, featureID int64, content string, isActive *bool) (int64, error)
 	DeleteBanner(bannerID int64) error
@@ -50,12 +48,8 @@ func NewBannerService(
 	}
 }
 
-var (
-	ErrNotFound = goErrors.New("")
-)
-
-func (bs *BannerService) GetBannersByFeature(featureID, limit, offset int64) ([]*serviceModels.BannerWithTagIDs, error) {
-	banners, tagIDs, err := bs.bannerRepo.GetBannersByFeature(featureID, limit, offset)
+func (bs *BannerService) GetBannersByFeature(featureID, limit, offset, role int64) ([]*serviceModels.BannerWithTagIDs, error) {
+	banners, tagIDs, err := bs.bannerRepo.GetBannersByFeature(featureID, limit, offset, role)
 	if err != nil {
 		return nil, err
 	}
@@ -63,14 +57,14 @@ func (bs *BannerService) GetBannersByFeature(featureID, limit, offset int64) ([]
 	bannersWithTags := make([]*serviceModels.BannerWithTagIDs, 0)
 
 	for _, banner := range banners {
-		bannersWithTags = append(bannersWithTags, serviceModels.ConvertToBL(*banner, tagIDs))
+		bannersWithTags = append(bannersWithTags, serviceModels.ConvertToBL(banner, tagIDs))
 	}
 
 	return bannersWithTags, nil
 }
 
-func (bs *BannerService) GetBannersByTag(tagID, limit, offset int64) ([]*serviceModels.BannerWithTagIDs, error) {
-	banners, tagIDs, err := bs.bannerRepo.GetBannersByTag(tagID, limit, offset)
+func (bs *BannerService) GetBannersByTag(tagID, limit, offset, role int64) ([]*serviceModels.BannerWithTagIDs, error) {
+	banners, tagIDs, err := bs.bannerRepo.GetBannersByTag(tagID, limit, offset, role)
 	if err != nil {
 		return nil, err
 	}
@@ -78,21 +72,21 @@ func (bs *BannerService) GetBannersByTag(tagID, limit, offset int64) ([]*service
 	bannersWithTags := make([]*serviceModels.BannerWithTagIDs, 0)
 
 	for _, banner := range banners {
-		bannersWithTags = append(bannersWithTags, serviceModels.ConvertToBL(*banner, tagIDs))
+		bannersWithTags = append(bannersWithTags, serviceModels.ConvertToBL(banner, tagIDs))
 	}
 
 	return bannersWithTags, nil
 }
 
-func (bs *BannerService) GetBannersByFeatureAndTag(featureID, tagID int64) ([]*serviceModels.BannerWithTagIDs, error) {
-	banner, err := bs.bannerRepo.GetBannerByFeatureAndTag(featureID, tagID)
+func (bs *BannerService) GetBannersByFeatureAndTag(featureID, tagID, role int64) ([]*serviceModels.BannerWithTagIDs, error) {
+	banner, err := bs.bannerRepo.GetBannerByFeatureAndTag(featureID, tagID, role)
 	if err != nil {
 		return nil, err
 	}
 
 	bannersWithTags := make([]*serviceModels.BannerWithTagIDs, 1)
 
-	bannersWithTags[0] = serviceModels.ConvertToBL(*banner, map[int64][]int64{
+	bannersWithTags[0] = serviceModels.ConvertToBL(banner, map[int64][]int64{
 		banner.BannerID: {tagID},
 	})
 
@@ -100,9 +94,11 @@ func (bs *BannerService) GetBannersByFeatureAndTag(featureID, tagID int64) ([]*s
 }
 
 func (bs *BannerService) CreateBanner(tagIDs []int64, featureID int64, content string, isActive bool) (int64, error) {
-	_, err := bs.featureRepo.GetFeatureByID(featureID)
-	if err != nil {
-		return 0, err
+	if featureID != 0 {
+		_, err := bs.featureRepo.GetFeatureByID(featureID)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	for _, tagID := range tagIDs {
@@ -128,9 +124,11 @@ func (bs *BannerService) CreateBanner(tagIDs []int64, featureID int64, content s
 }
 
 func (bs *BannerService) UpdateBanner(bannerID int64, tagIDs []int64, featureID int64, content string, isActive *bool) (int64, error) {
-	_, err := bs.featureRepo.GetFeatureByID(featureID)
-	if err != nil {
-		return 0, err
+	if featureID != 0 {
+		_, err := bs.featureRepo.GetFeatureByID(featureID)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	for _, tagID := range tagIDs {
@@ -166,8 +164,8 @@ func (bs *BannerService) DeleteBanner(bannerID int64) error {
 	return nil
 }
 
-func (bs *BannerService) GetBannerContentByFeatureAndTag(featureID, tagID int64) (string, error) {
-	banner, err := bs.bannerRepo.GetBannerByFeatureAndTag(featureID, tagID)
+func (bs *BannerService) GetBannerContentByFeatureAndTag(featureID, tagID, role int64) (string, error) {
+	banner, err := bs.bannerRepo.GetBannerByFeatureAndTag(featureID, tagID, role)
 	if err != nil {
 		return "", err
 	}

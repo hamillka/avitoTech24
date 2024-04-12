@@ -16,7 +16,7 @@ type BannerWithTagIDs struct {
 	UpdatedAt time.Time
 }
 
-func ConvertToBL(banner models.Banner, tagIDs map[int64][]int64) *BannerWithTagIDs {
+func ConvertToBL(banner *models.Banner, tagIDs map[int64][]int64) *BannerWithTagIDs {
 	return &BannerWithTagIDs{
 		BannerID:  banner.BannerID,
 		FeatureID: banner.FeatureID,

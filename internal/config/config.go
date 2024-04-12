@@ -1,15 +1,14 @@
 package config
 
 import (
-	"github.com/kelseyhightower/envconfig"
-
 	"github.com/hamillka/avitoTech24/internal/db"
 	"github.com/hamillka/avitoTech24/internal/logger"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type Config struct {
 	Log  logger.LogConfig  `envconfig:"LOG"`
-	Db   db.DatabaseConfig `envconfig:"DB"`
+	DB   db.DatabaseConfig `envconfig:"DB"`
 	Port string            `envconfig:"PORT"`
 }
 

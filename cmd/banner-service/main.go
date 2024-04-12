@@ -26,7 +26,7 @@ func main() {
 		logger.Errorf("Something went wrong with config: %v", err)
 	}
 
-	db, err := db.CreateConnection(config.Db)
+	db, err := db.CreateConnection(&config.DB)
 
 	defer func() {
 		err := db.Close()

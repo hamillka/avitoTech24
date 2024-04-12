@@ -16,15 +16,11 @@ import (
 
 var ErrValidate = errors.New("validation error")
 
-const (
-	ADMIN = 0
-)
-
 type IBannerService interface {
-	GetBannersByFeature(featureID, limit, offset int64) ([]*models.BannerWithTagIDs, error)
-	GetBannersByTag(tagID, limit, offset int64) ([]*models.BannerWithTagIDs, error)
-	GetBannersByFeatureAndTag(featureID, tagID int64) ([]*models.BannerWithTagIDs, error)
-	GetBannerContentByFeatureAndTag(featureID, tagID int64) (string, error)
+	GetBannersByFeature(featureID, limit, offset, role int64) ([]*models.BannerWithTagIDs, error)
+	GetBannersByTag(tagID, limit, offset, role int64) ([]*models.BannerWithTagIDs, error)
+	GetBannersByFeatureAndTag(featureID, tagID, role int64) ([]*models.BannerWithTagIDs, error)
+	GetBannerContentByFeatureAndTag(featureID, tagID, role int64) (string, error)
 	CreateBanner(tagIDs []int64, featureID int64, content string, isActive bool) (int64, error)
 	UpdateBanner(bannerID int64, tagIDs []int64, featureID int64, content string, isActive *bool) (int64, error)
 	DeleteBanner(bannerID int64) error
@@ -84,6 +80,9 @@ func (bh *BannerHandler) GetBanners(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	if limit == 0 {
+		limit = 50
+	}
 
 	offset, err := getQueryParam(r, "offset")
 	if err != nil {
@@ -99,10 +98,14 @@ func (bh *BannerHandler) GetBanners(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
+	claims := ctx.Value("props").(jwt.MapClaims)
+	role := int64(claims["role"].(float64))
+
 	var bannersWithTags []*models.BannerWithTagIDs
 
 	if featureID != 0 && tagID == 0 {
-		bannersWithTags, err = bh.service.GetBannersByFeature(featureID, limit, offset)
+		bannersWithTags, err = bh.service.GetBannersByFeature(featureID, limit, offset, role)
 		if err != nil {
 			bh.logger.Errorf("banner handler: GetBannersByFeature %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -116,7 +119,7 @@ func (bh *BannerHandler) GetBanners(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if featureID == 0 && tagID != 0 {
-		bannersWithTags, err = bh.service.GetBannersByTag(tagID, limit, offset)
+		bannersWithTags, err = bh.service.GetBannersByTag(tagID, limit, offset, role)
 		if err != nil {
 			bh.logger.Errorf("banner handler: GetBannersByTag %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -130,7 +133,7 @@ func (bh *BannerHandler) GetBanners(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if featureID != 0 && tagID != 0 {
-		bannersWithTags, err = bh.service.GetBannersByFeatureAndTag(featureID, tagID)
+		bannersWithTags, err = bh.service.GetBannersByFeatureAndTag(featureID, tagID, role)
 		if err != nil {
 			bh.logger.Errorf("banner handler: GetBannersByFeatureAndTag %s", err)
 			var errorDto *dto.ErrorDto
@@ -156,7 +159,7 @@ func (bh *BannerHandler) GetBanners(w http.ResponseWriter, r *http.Request) {
 	getBannersResponseDto := make([]*dto.GetBannersResponseDto, 0)
 
 	for _, bannerWithTag := range bannersWithTags {
-		getBannersResponseDto = append(getBannersResponseDto, dto.ConvertToDto(*bannerWithTag))
+		getBannersResponseDto = append(getBannersResponseDto, dto.ConvertToDto(bannerWithTag))
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -171,8 +174,8 @@ func (bh *BannerHandler) CreateBanner(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	claims := ctx.Value("props").(jwt.MapClaims)
-	role, _ := claims["role"].(int)
-	if role != ADMIN {
+	role := int64(claims["role"].(float64))
+	if role != dto.ADMIN {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
@@ -231,8 +234,8 @@ func (bh *BannerHandler) UpdateBanner(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	claims := ctx.Value("props").(jwt.MapClaims)
-	role, _ := claims["role"].(int)
-	if role != ADMIN {
+	role := int64(claims["role"].(float64))
+	if role != dto.ADMIN {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
@@ -267,7 +270,12 @@ func (bh *BannerHandler) UpdateBanner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	content, err := json.Marshal(banner.Content)
+	var content []byte
+	if len(banner.Content) == 0 {
+		content = []byte("")
+	} else {
+		content, err = json.Marshal(banner.Content)
+	}
 	id, err := bh.service.UpdateBanner(bannerID, banner.TagIDs, banner.FeatureID, string(content), banner.IsActive)
 	if err != nil {
 		bh.logger.Errorf("banner handler: UpdateBanner %s", err)
@@ -304,8 +312,8 @@ func (bh *BannerHandler) UpdateBanner(w http.ResponseWriter, r *http.Request) {
 func (bh *BannerHandler) DeleteBanner(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	claims := ctx.Value("props").(jwt.MapClaims)
-	role, _ := claims["role"].(int)
-	if role != ADMIN {
+	role := int64(claims["role"].(float64))
+	if role != dto.ADMIN {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
@@ -393,7 +401,11 @@ func (bh *BannerHandler) GetUserBanner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	content, err := bh.service.GetBannerContentByFeatureAndTag(featureID, tagID)
+	ctx := r.Context()
+	claims := ctx.Value("props").(jwt.MapClaims)
+	role := int64(claims["role"].(float64))
+
+	content, err := bh.service.GetBannerContentByFeatureAndTag(featureID, tagID, role)
 	if err != nil {
 		bh.logger.Errorf("banner handler: GetBannerContentByFeatureAndTag %s", err)
 		var errorDto *dto.ErrorDto
