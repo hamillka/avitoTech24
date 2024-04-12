@@ -27,7 +27,6 @@ func (tr *TagRepository) GetTagByID(tagID int64) (*repoModels.Tag, error) {
 		&tag.TagID,
 		&tag.Name,
 	)
-
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrRecordNotFound

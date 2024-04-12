@@ -8,16 +8,16 @@ import (
 )
 
 type DatabaseConfig struct {
-	DbHost string `envconfig:"HOST"`
-	DbPort string `envconfig:"PORT"`
-	DbName string `envconfig:"NAME"`
-	DbUser string `envconfig:"USER"`
-	DbPass string `envconfig:"PASS"`
+	DBHost string `envconfig:"HOST"`
+	DBPort string `envconfig:"PORT"`
+	DBName string `envconfig:"NAME"`
+	DBUser string `envconfig:"USER"`
+	DBPass string `envconfig:"PASS"`
 }
 
-func CreateConnection(config DatabaseConfig) (*sqlx.DB, error) {
+func CreateConnection(config *DatabaseConfig) (*sqlx.DB, error) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
-		config.DbHost, config.DbUser, config.DbPass, config.DbName, config.DbPort)
+		config.DBHost, config.DBUser, config.DBPass, config.DBName, config.DBPort)
 	db, err := sqlx.Open("postgres", dsn)
 	if err != nil {
 		return nil, err

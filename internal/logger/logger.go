@@ -8,7 +8,7 @@ import (
 )
 
 type LogConfig struct {
-	Level zapcore.Level `envconfig:"LEVEL" default:"debug"`
+	Level zapcore.Level `default:"debug" envconfig:"LEVEL"`
 }
 
 func CreateLogger(cfg LogConfig) *zap.SugaredLogger {

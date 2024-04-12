@@ -7,10 +7,10 @@ import (
 )
 
 type CreateOrUpdateBannerRequestDto struct {
-	TagIDs    []int64 `json:"tag_ids"`
-	FeatureID int64   `json:"feature_id"`
-	Content   string  `json:"content"`
-	IsActive  *bool   `json:"is_active"`
+	Content   map[string]interface{} `json:"content"`
+	IsActive  *bool                  `json:"is_active"`
+	TagIDs    []int64                `json:"tag_ids"`
+	FeatureID int64                  `json:"feature_id"`
 }
 
 type CreateOrUpdateBannerResponseDto struct {
@@ -27,7 +27,11 @@ type GetBannersResponseDto struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func ConvertToDto(banner models.BannerWithTagIDs) *GetBannersResponseDto {
+type GetUserBannerResponseDto struct {
+	Content string `json:"content"`
+}
+
+func ConvertToDto(banner *models.BannerWithTagIDs) *GetBannersResponseDto {
 	return &GetBannersResponseDto{
 		BannerID:  banner.BannerID,
 		FeatureID: banner.FeatureID,
@@ -38,3 +42,8 @@ func ConvertToDto(banner models.BannerWithTagIDs) *GetBannersResponseDto {
 		UpdatedAt: banner.UpdatedAt,
 	}
 }
+
+const (
+	ADMIN = iota
+	USER
+)

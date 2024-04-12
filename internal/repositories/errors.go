@@ -1,13 +1,13 @@
 package repositories
 
 import (
-	goErrors "errors"
+	"errors"
 )
 
 var (
-	ErrRecordNotFound        = goErrors.New("record was not found")
-	ErrDatabaseWritingError  = goErrors.New("error while writing to DB")
-	ErrDatabaseReadingError  = goErrors.New("error while reading from DB")
-	ErrRecordAlreadyExists   = goErrors.New("record with this data already exists")
-	ErrDatabaseUpdatingError = goErrors.New("record was not updated")
+	ErrRecordNotFound        = errors.New("record was not found")
+	ErrDatabaseWritingError  = errors.New("error while writing to DB")
+	ErrDatabaseReadingError  = errors.New("error while reading from DB")
+	ErrRecordAlreadyExists   = errors.New("record with this data already exists")
+	ErrDatabaseUpdatingError = errors.New("record was not updated")
 )

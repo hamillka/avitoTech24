@@ -27,7 +27,6 @@ func (fr *FeatureRepository) GetFeatureByID(featureID int64) (*repoModels.Featur
 		&feature.FeatureID,
 		&feature.Name,
 	)
-
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrRecordNotFound
