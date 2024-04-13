@@ -139,6 +139,9 @@ func (bs *BannerService) UpdateBanner(bannerID int64, tagIDs []int64, featureID 
 	}
 
 	id, err := bs.bannerRepo.UpdateBanner(bannerID, featureID, content, isActive)
+	if err != nil {
+		return 0, err
+	}
 
 	err = bs.bannerTagRepo.DeleteRecordsByBannerID(bannerID)
 	if err != nil {
