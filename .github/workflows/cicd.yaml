@@ -11,7 +11,7 @@ jobs:
       - name: golangci-lint
         uses: ./
         with:
-          args: --config=./golangci.yaml ./...
+          args: --config=.github/.golangci.yml ./...
 
   build:
     name: build
