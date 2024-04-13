@@ -1,0 +1,31 @@
+version: "3"
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: on-failure
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: postgres
+    volumes:
+      - ./scripts/1-init.sql:/docker-entrypoint-initdb.d/1-init.sql
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  banner-service:
+    container_name: banner-service
+    build:
+      context: ./
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    links:
+      - postgres
+    restart: on-failure
+    env_file:
+      - configs/cfg.env
+volumes:
+  db-data:
