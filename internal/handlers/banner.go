@@ -40,18 +40,24 @@ func NewBannerHandler(s BannerService, logger *zap.SugaredLogger) *BannerHandler
 
 // GetBanners godoc
 //
-//	@Summary		Получить баннеры
-//	@Description	Получить все баннеры по фиче и/или тегу
-//	@ID				get-banners-by-feature-tag
-//	@Tags			banners
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	    {array} 	dto.GetBannersResponseDto	"OK"
-//	@Failure		400	    {object}	dto.ErrorDto				"Некорректные данные"
-//	@Failure		401	    {object}								"Пользователь не авторизован"
-//	@Failure		404	    {object}	dto.ErrorDto				"Баннер не найден"
-//	@Failure		500	    {object}	dto.ErrorDto				"Внутренняя ошибка сервера"
-//	@Router			/banner [get]
+//		@Summary		Получить баннеры
+//		@Description	Получить все баннеры по фиче и/или тегу
+//		@ID				get-banners-by-feature-tag
+//		@Tags			banners
+//		@Accept			json
+//		@Produce		json
+//		@Param 			feature_id	query	integer		false	"Идентификатор фичи"
+//		@Param 			tag_id		query	integer		false	"Идентификатор тега"
+//		@Param 			limit		query	integer		false	"Лимит"
+//		@Param 			offset		query	integer		false	"Оффсет"
+//
+//		@Success		200	    {array} 	dto.GetBannersResponseDto	"OK"
+//		@Failure		400	    {object}	dto.ErrorDto				"Некорректные данные"
+//		@Failure		401	    {object}	dto.ErrorDto				"Пользователь не авторизован"
+//		@Failure		404	    {object}	dto.ErrorDto				"Баннер не найден"
+//		@Failure		500	    {object}	dto.ErrorDto				"Внутренняя ошибка сервера"
+//	    @Security		ApiKeyAuth
+//		@Router			/banner [get]
 func (bh *BannerHandler) GetBanners(w http.ResponseWriter, r *http.Request) {
 	featureID, err := getQueryParam(r, "feature_id")
 	if err != nil {
@@ -185,18 +191,21 @@ func (bh *BannerHandler) GetBanners(w http.ResponseWriter, r *http.Request) {
 
 // CreateBanner godoc
 //
-//	@Summary		Создать баннер
-//	@Description	Создать баннер в таблице banners и добавить связи в banner-tag
-//	@ID				create-banner
-//	@Tags			banners
-//	@Accept			json
-//	@Produce		json
-//	@Success		200	    {object} 	dto.CreateOrUpdateBannerResponseDto	"Created"
-//	@Failure		400	    {object}	dto.ErrorDto						"Некорректные данные"
-//	@Failure		401	    {object}										"Пользователь не авторизован"
-//	@Failure		403	    {object}										"Пользователь не имеет доступа"
-//	@Failure		500	    {object}	dto.ErrorDto						"Внутренняя ошибка сервера"
-//	@Router			/banner [post]
+// @Summary		Создать баннер
+// @Description	Создать баннер в таблице banners и добавить связи в banner-tag
+// @ID				create-banner
+// @Tags			banners
+// @Accept			json
+// @Produce			json
+// @Param			Banner	body	dto.CreateOrUpdateBannerRequestDto	true	"Информация о добавляемом баннере"
+//
+// @Success		201	    {object} 	dto.CreateOrUpdateBannerResponseDto	"Created"
+// @Failure		400	    {object}	dto.ErrorDto						"Некорректные данные"
+// @Failure		401	    {object}	dto.ErrorDto						"Пользователь не авторизован"
+// @Failure		403	    {object}	dto.ErrorDto						"Пользователь не имеет доступа"
+// @Failure		500	    {object}	dto.ErrorDto						"Внутренняя ошибка сервера"
+// @Security		ApiKeyAuth
+// @Router			/banner [post]
 func (bh *BannerHandler) CreateBanner(w http.ResponseWriter, r *http.Request) {
 	var banner dto.CreateOrUpdateBannerRequestDto
 
@@ -265,13 +274,17 @@ func (bh *BannerHandler) CreateBanner(w http.ResponseWriter, r *http.Request) {
 //	@Tags			banners
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	    {object} 	dto.CreateOrUpdateBannerResponseDto	"OK"
-//	@Failure		400	    {object}	dto.ErrorDto						"Некорректные данные"
-//	@Failure		401	    {object}										"Пользователь не авторизован"
-//	@Failure		403	    {object}										"Пользователь не имеет доступа"
-//	@Failure		404	    {object}	dto.ErrorDto						"Баннер не найден"
-//	@Failure		500	    {object}	dto.ErrorDto						"Внутренняя ошибка сервера"
-//	@Router			/banner/{id} [patch]
+//	@Param 			id		path	integer		true	"Идентификатор баннера"
+//	@Param			Banner	body	dto.CreateOrUpdateBannerRequestDto	true	"Информация о добавляемом баннере"
+//
+// @Success		200	    {object} 	dto.CreateOrUpdateBannerResponseDto	"OK"
+// @Failure		400	    {object}	dto.ErrorDto						"Некорректные данные"
+// @Failure		401	    {object}	dto.ErrorDto						"Пользователь не авторизован"
+// @Failure		403	    {object}	dto.ErrorDto						"Пользователь не имеет доступа"
+// @Failure		404	    {object}	dto.ErrorDto						"Баннер не найден"
+// @Failure		500	    {object}	dto.ErrorDto						"Внутренняя ошибка сервера"
+// @Security		ApiKeyAuth
+// @Router			/banner/{id} [patch]
 func (bh *BannerHandler) UpdateBanner(w http.ResponseWriter, r *http.Request) {
 	var banner dto.CreateOrUpdateBannerRequestDto
 
@@ -360,13 +373,16 @@ func (bh *BannerHandler) UpdateBanner(w http.ResponseWriter, r *http.Request) {
 //	@Tags			banners
 //	@Accept			json
 //	@Produce		json
-//	@Success		204	    {object} 							"Баннер успешно удален"
-//	@Failure		400	    {object}	dto.ErrorDto			"Некорректные данные"
-//	@Failure		401	    {object}							"Пользователь не авторизован"
-//	@Failure		403	    {object}							"Пользователь не имеет доступа"
-//	@Failure		404	    {object}	dto.ErrorDto			"Баннер для тега не найден"
-//	@Failure		500	    {object}	dto.ErrorDto			"Внутренняя ошибка сервера"
-//	@Router			/banner/{id} [delete]
+//	@Param 			id		path	integer		true	"Идентификатор баннера"
+//
+// @Success		204	    {object} 	dto.ErrorDto			"Баннер успешно удален"
+// @Failure		400	    {object}	dto.ErrorDto			"Некорректные данные"
+// @Failure		401	    {object}	dto.ErrorDto			"Пользователь не авторизован"
+// @Failure		403	    {object}	dto.ErrorDto			"Пользователь не имеет доступа"
+// @Failure		404	    {object}	dto.ErrorDto			"Баннер для тега не найден"
+// @Failure		500	    {object}	dto.ErrorDto			"Внутренняя ошибка сервера"
+// @Security		ApiKeyAuth
+// @Router			/banner/{id} [delete]
 func (bh *BannerHandler) DeleteBanner(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	claims := ctx.Value("props").(jwt.MapClaims)
@@ -424,13 +440,18 @@ func (bh *BannerHandler) DeleteBanner(w http.ResponseWriter, r *http.Request) {
 //	@Tags			banner
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	    {object} 	dto.GetUserBannerResponseDto	"Баннер пользователя"
-//	@Failure		400	    {object}	dto.ErrorDto					"Некорректные данные"
-//	@Failure		401	    {object}									"Пользователь не авторизован"
-//	@Failure		403	    {object}									"Пользователь не имеет доступа"
-//	@Failure		404	    {object}	dto.ErrorDto					"Баннер для пользователя не найден"
-//	@Failure		500	    {object}	dto.ErrorDto					"Внутренняя ошибка сервера"
-//	@Router			/banner [get]
+//	@Param 			tag_id				query	integer		true	"Тэг пользователя"
+//	@Param 			feature_id			query	integer		true	"Идентификатор фичи"
+//	@Param 			use_last_revision	query	boolean		false	"Получать актуальную информацию "
+//
+// @Success		200	    {object} 	dto.GetUserBannerResponseDto	"Баннер пользователя"
+// @Failure		400	    {object}	dto.ErrorDto					"Некорректные данные"
+// @Failure		401	    {object}	dto.ErrorDto					"Пользователь не авторизован"
+// @Failure		403	    {object}	dto.ErrorDto					"Пользователь не имеет доступа"
+// @Failure		404	    {object}	dto.ErrorDto					"Баннер для пользователя не найден"
+// @Failure		500	    {object}	dto.ErrorDto					"Внутренняя ошибка сервера"
+// @Security		ApiKeyAuth
+// @Router			/user_banner [get]
 func (bh *BannerHandler) GetUserBanner(w http.ResponseWriter, r *http.Request) {
 	featureID, err := getQueryParam(r, "feature_id")
 	if err != nil {
@@ -460,19 +481,19 @@ func (bh *BannerHandler) GetUserBanner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = getQueryParam(r, "use_last_revision") // useLastRevision
-	if err != nil {
-		bh.logger.Warn(err)
-		w.WriteHeader(http.StatusBadRequest)
-		errorDto := &dto.ErrorDto{
-			Error: "Некорректные данные",
-		}
-		err = json.NewEncoder(w).Encode(errorDto)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		return
-	}
+	//_, err = getQueryParam(r, "use_last_revision") // useLastRevision
+	//if err != nil {
+	//	bh.logger.Warn(err)
+	//	w.WriteHeader(http.StatusBadRequest)
+	//	errorDto := &dto.ErrorDto{
+	//		Error: "Некорректные данные",
+	//	}
+	//	err = json.NewEncoder(w).Encode(errorDto)
+	//	if err != nil {
+	//		w.WriteHeader(http.StatusInternalServerError)
+	//	}
+	//	return
+	//}
 
 	ctx := r.Context()
 	claims := ctx.Value("props").(jwt.MapClaims)

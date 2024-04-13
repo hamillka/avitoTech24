@@ -11,10 +11,14 @@ import (
 	"github.com/hamillka/avitoTech24/internal/services"
 )
 
-// @title       Banner Service
-// @version     1.0
+// @title Banner Service
+// @version 1.0
 // @description Banner Service
-
+//
+//	@securityDefinitions.apikey	ApiKeyAuth
+//	@in							header
+//	@name						auth-x
+//	@description				Description for what is this security definition being used
 func main() {
 	config, err := config.New()
 	logger := logger.CreateLogger(config.Log)
