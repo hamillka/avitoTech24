@@ -11,6 +11,10 @@ import (
 	"github.com/hamillka/avitoTech24/internal/services"
 )
 
+// @title       Banner Service
+// @version     1.0
+// @description Banner Service
+
 func main() {
 	config, err := config.New()
 	logger := logger.CreateLogger(config.Log)

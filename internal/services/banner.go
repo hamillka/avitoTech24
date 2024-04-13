@@ -5,7 +5,7 @@ import (
 	serviceModels "github.com/hamillka/avitoTech24/internal/services/models"
 )
 
-type IBannerRepository interface {
+type BannerRepository interface {
 	GetBannersByFeature(featureID, limit, offset, role int64) ([]*repoModels.Banner, map[int64][]int64, error)
 	GetBannersByTag(tagID, limit, offset, role int64) ([]*repoModels.Banner, map[int64][]int64, error)
 	GetBannerByFeatureAndTag(featureID, tagID, role int64) (*repoModels.Banner, error)
@@ -14,31 +14,31 @@ type IBannerRepository interface {
 	DeleteBanner(bannerID int64) error
 }
 
-type IFeatureRepository interface {
+type FeatureRepository interface {
 	GetFeatureByID(featureID int64) (*repoModels.Feature, error)
 }
 
-type ITagRepository interface {
+type TagRepository interface {
 	GetTagByID(tagID int64) (*repoModels.Tag, error)
 }
 
-type IBannerTagRepository interface {
+type BannerTagRepository interface {
 	CreateBannerTag(bannerID, tagID int64) error
 	DeleteRecordsByBannerID(bannerID int64) error
 }
 
 type BannerService struct {
-	bannerRepo    IBannerRepository
-	featureRepo   IFeatureRepository
-	tagRepo       ITagRepository
-	bannerTagRepo IBannerTagRepository
+	bannerRepo    BannerRepository
+	featureRepo   FeatureRepository
+	tagRepo       TagRepository
+	bannerTagRepo BannerTagRepository
 }
 
 func NewBannerService(
-	bannerRepository IBannerRepository,
-	featureRepository IFeatureRepository,
-	tagRepository ITagRepository,
-	bannerTagRepository IBannerTagRepository,
+	bannerRepository BannerRepository,
+	featureRepository FeatureRepository,
+	tagRepository TagRepository,
+	bannerTagRepository BannerTagRepository,
 ) *BannerService {
 	return &BannerService{
 		bannerRepo:    bannerRepository,
