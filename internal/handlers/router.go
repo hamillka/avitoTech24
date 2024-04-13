@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/gorilla/mux"
+	_ "github.com/hamillka/avitoTech24/api"
 	"github.com/hamillka/avitoTech24/internal/handlers/middlewares"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"go.uber.org/zap"
@@ -10,16 +11,16 @@ import (
 func Router(bs BannerService, logger *zap.SugaredLogger) *mux.Router {
 	router := mux.NewRouter()
 	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+	api := router.PathPrefix("").Subrouter()
 
 	bh := NewBannerHandler(bs, logger)
-	router.HandleFunc("/banner", bh.GetBanners).Methods("GET")
-	router.HandleFunc("/banner", bh.CreateBanner).Methods("POST")
+	api.HandleFunc("/banner", bh.GetBanners).Subrouter().Methods("GET")
+	api.HandleFunc("/banner", bh.CreateBanner).Subrouter().Methods("POST")
 
-	router.HandleFunc("/banner/{id}", bh.UpdateBanner).Methods("PATCH")
-	router.HandleFunc("/banner/{id}", bh.DeleteBanner).Methods("DELETE")
+	api.HandleFunc("/banner/{id}", bh.UpdateBanner).Subrouter().Methods("PATCH")
+	api.HandleFunc("/banner/{id}", bh.DeleteBanner).Subrouter().Methods("DELETE")
 
-	router.HandleFunc("/user_banner", bh.GetUserBanner).Methods("GET")
-
-	router.Use(middlewares.AuthMiddleware)
+	api.HandleFunc("/user_banner", bh.GetUserBanner).Subrouter().Methods("GET")
+	api.Use(middlewares.AuthMiddleware)
 	return router
 }

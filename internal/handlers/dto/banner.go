@@ -14,34 +14,34 @@ const (
 // CreateOrUpdateBannerRequestDto model info
 // @Description Информация о баннере при создании или изменении
 type CreateOrUpdateBannerRequestDto struct {
-	Content   map[string]interface{} `json:"content"`
-	IsActive  *bool                  `json:"is_active"`
-	TagIDs    []int64                `json:"tag_ids"`
-	FeatureID int64                  `json:"feature_id"`
+	Content   map[string]interface{} `json:"content"`    // Контент баннера
+	IsActive  *bool                  `json:"is_active"`  // Статус активности баннера
+	TagIDs    []int64                `json:"tag_ids"`    // Теги баннера
+	FeatureID int64                  `json:"feature_id"` // Фича баннера
 }
 
 // CreateOrUpdateBannerResponseDto model info
 // @Description Информация о баннере при создании или изменении
 type CreateOrUpdateBannerResponseDto struct {
-	ID int64 `json:"id"`
+	ID int64 `json:"id"` // Идентификатор баннера
 }
 
 // GetBannersResponseDto model info
 // @Description Информация о баннере при получении баннеров
 type GetBannersResponseDto struct {
-	BannerID  int64     `json:"banner_id"`
-	FeatureID int64     `json:"feature_id"`
-	TagIDs    []int64   `json:"tag_ids"`
-	Content   string    `json:"content"`
-	IsActive  bool      `json:"is_active"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	BannerID  int64     `json:"banner_id"`  // Идентификатор баннера
+	FeatureID int64     `json:"feature_id"` // Фича баннера
+	TagIDs    []int64   `json:"tag_ids"`    // Теги баннера
+	Content   string    `json:"content"`    // Контент баннера
+	IsActive  bool      `json:"is_active"`  // Статус активности баннера
+	CreatedAt time.Time `json:"created_at"` // Время создания баннера
+	UpdatedAt time.Time `json:"updated_at"` // Время обновления баннера
 }
 
 // GetUserBannerResponseDto model info
 // @Description Информация о контенте при получении баннера
 type GetUserBannerResponseDto struct {
-	Content string `json:"content"`
+	Content string `json:"content"` // Контент баннера
 }
 
 func ConvertToDto(banner *models.BannerWithTagIDs) *GetBannersResponseDto {

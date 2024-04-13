@@ -1,0 +1,320 @@
+definitions:
+  dto.CreateOrUpdateBannerRequestDto:
+    description: Информация о баннере при создании или изменении
+    properties:
+      content:
+        additionalProperties: true
+        description: Контент баннера
+        type: object
+      feature_id:
+        description: Фича баннера
+        type: integer
+      is_active:
+        description: Статус активности баннера
+        type: boolean
+      tag_ids:
+        description: Теги баннера
+        items:
+          type: integer
+        type: array
+    type: object
+  dto.CreateOrUpdateBannerResponseDto:
+    description: Информация о баннере при создании или изменении
+    properties:
+      id:
+        description: Идентификатор баннера
+        type: integer
+    type: object
+  dto.ErrorDto:
+    description: Информация об ошибке (DTO)
+    properties:
+      error:
+        description: Ошибка
+        type: string
+    type: object
+  dto.GetBannersResponseDto:
+    description: Информация о баннере при получении баннеров
+    properties:
+      banner_id:
+        description: Идентификатор баннера
+        type: integer
+      content:
+        description: Контент баннера
+        type: string
+      created_at:
+        description: Время создания баннера
+        type: string
+      feature_id:
+        description: Фича баннера
+        type: integer
+      is_active:
+        description: Статус активности баннера
+        type: boolean
+      tag_ids:
+        description: Теги баннера
+        items:
+          type: integer
+        type: array
+      updated_at:
+        description: Время обновления баннера
+        type: string
+    type: object
+  dto.GetUserBannerResponseDto:
+    description: Информация о контенте при получении баннера
+    properties:
+      content:
+        description: Контент баннера
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Banner Service
+  title: Banner Service
+  version: "1.0"
+paths:
+  /banner:
+    get:
+      consumes:
+      - application/json
+      description: Получить все баннеры по фиче и/или тегу
+      operationId: get-banners-by-feature-tag
+      parameters:
+      - description: Идентификатор фичи
+        in: query
+        name: feature_id
+        type: integer
+      - description: Идентификатор тега
+        in: query
+        name: tag_id
+        type: integer
+      - description: Лимит
+        in: query
+        name: limit
+        type: integer
+      - description: Оффсет
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.GetBannersResponseDto'
+            type: array
+        "400":
+          description: Некорректные данные
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "404":
+          description: Баннер не найден
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить баннеры
+      tags:
+      - banners
+    post:
+      consumes:
+      - application/json
+      description: Создать баннер в таблице banners и добавить связи в banner-tag
+      operationId: create-banner
+      parameters:
+      - description: Информация о добавляемом баннере
+        in: body
+        name: Banner
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateOrUpdateBannerRequestDto'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CreateOrUpdateBannerResponseDto'
+        "400":
+          description: Некорректные данные
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "403":
+          description: Пользователь не имеет доступа
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+      security:
+      - ApiKeyAuth: []
+      summary: Создать баннер
+      tags:
+      - banners
+  /banner/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удалить баннер в таблице banners и удалить связи в banner-tag
+      operationId: delete-banner
+      parameters:
+      - description: Идентификатор баннера
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Баннер успешно удален
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "400":
+          description: Некорректные данные
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "403":
+          description: Пользователь не имеет доступа
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "404":
+          description: Баннер для тега не найден
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+      security:
+      - ApiKeyAuth: []
+      summary: Удалить баннер
+      tags:
+      - banners
+    patch:
+      consumes:
+      - application/json
+      description: Изменить баннер в таблице banners и изменить связи в banner-tag
+      operationId: update-banner
+      parameters:
+      - description: Идентификатор баннера
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Информация о добавляемом баннере
+        in: body
+        name: Banner
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateOrUpdateBannerRequestDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.CreateOrUpdateBannerResponseDto'
+        "400":
+          description: Некорректные данные
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "403":
+          description: Пользователь не имеет доступа
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "404":
+          description: Баннер не найден
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+      security:
+      - ApiKeyAuth: []
+      summary: Изменить баннер
+      tags:
+      - banners
+  /user_banner:
+    get:
+      consumes:
+      - application/json
+      description: Получить баннер по фиче и тегу
+      operationId: get-banner-by-feature-and-tag
+      parameters:
+      - description: Тэг пользователя
+        in: query
+        name: tag_id
+        required: true
+        type: integer
+      - description: Идентификатор фичи
+        in: query
+        name: feature_id
+        required: true
+        type: integer
+      - description: 'Получать актуальную информацию '
+        in: query
+        name: use_last_revision
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Баннер пользователя
+          schema:
+            $ref: '#/definitions/dto.GetUserBannerResponseDto'
+        "400":
+          description: Некорректные данные
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "403":
+          description: Пользователь не имеет доступа
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "404":
+          description: Баннер для пользователя не найден
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorDto'
+      security:
+      - ApiKeyAuth: []
+      summary: Получение баннера для пользователя
+      tags:
+      - banner
+securityDefinitions:
+  ApiKeyAuth:
+    description: Description for what is this security definition being used
+    in: header
+    name: auth-x
+    type: apiKey
+swagger: "2.0"
