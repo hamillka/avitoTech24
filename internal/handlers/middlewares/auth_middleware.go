@@ -32,7 +32,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, errSigningMethod
 			}
-			return []byte("someSecretKey"), nil // HARDCODED
+			return []byte("someSecretKey"), nil
 		})
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {

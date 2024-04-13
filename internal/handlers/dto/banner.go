@@ -6,6 +6,13 @@ import (
 	"github.com/hamillka/avitoTech24/internal/services/models"
 )
 
+const (
+	ADMIN = iota
+	USER
+)
+
+// CreateOrUpdateBannerRequestDto model info
+// @Description Информация о баннере при создании или изменении
 type CreateOrUpdateBannerRequestDto struct {
 	Content   map[string]interface{} `json:"content"`
 	IsActive  *bool                  `json:"is_active"`
@@ -13,10 +20,14 @@ type CreateOrUpdateBannerRequestDto struct {
 	FeatureID int64                  `json:"feature_id"`
 }
 
+// CreateOrUpdateBannerResponseDto model info
+// @Description Информация о баннере при создании или изменении
 type CreateOrUpdateBannerResponseDto struct {
 	ID int64 `json:"id"`
 }
 
+// GetBannersResponseDto model info
+// @Description Информация о баннере при получении баннеров
 type GetBannersResponseDto struct {
 	BannerID  int64     `json:"banner_id"`
 	FeatureID int64     `json:"feature_id"`
@@ -27,6 +38,8 @@ type GetBannersResponseDto struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// GetUserBannerResponseDto model info
+// @Description Информация о контенте при получении баннера
 type GetUserBannerResponseDto struct {
 	Content string `json:"content"`
 }
@@ -42,8 +55,3 @@ func ConvertToDto(banner *models.BannerWithTagIDs) *GetBannersResponseDto {
 		UpdatedAt: banner.UpdatedAt,
 	}
 }
-
-const (
-	ADMIN = iota
-	USER
-)

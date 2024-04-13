@@ -16,7 +16,7 @@ import (
 
 var ErrValidate = errors.New("validation error")
 
-type IBannerService interface {
+type BannerService interface {
 	GetBannersByFeature(featureID, limit, offset, role int64) ([]*models.BannerWithTagIDs, error)
 	GetBannersByTag(tagID, limit, offset, role int64) ([]*models.BannerWithTagIDs, error)
 	GetBannersByFeatureAndTag(featureID, tagID, role int64) ([]*models.BannerWithTagIDs, error)
@@ -27,17 +27,31 @@ type IBannerService interface {
 }
 
 type BannerHandler struct {
-	service IBannerService
+	service BannerService
 	logger  *zap.SugaredLogger
 }
 
-func NewBannerHandler(s IBannerService, logger *zap.SugaredLogger) *BannerHandler {
+func NewBannerHandler(s BannerService, logger *zap.SugaredLogger) *BannerHandler {
 	return &BannerHandler{
 		service: s,
 		logger:  logger,
 	}
 }
 
+// GetBanners godoc
+//
+//	@Summary		Получить баннеры
+//	@Description	Получить все баннеры по фиче и/или тегу
+//	@ID				get-banners-by-feature-tag
+//	@Tags			banners
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	    {array} 	dto.GetBannersResponseDto	"OK"
+//	@Failure		400	    {object}	dto.ErrorDto				"Некорректные данные"
+//	@Failure		401	    {object}								"Пользователь не авторизован"
+//	@Failure		404	    {object}	dto.ErrorDto				"Баннер не найден"
+//	@Failure		500	    {object}	dto.ErrorDto				"Внутренняя ошибка сервера"
+//	@Router			/banner [get]
 func (bh *BannerHandler) GetBanners(w http.ResponseWriter, r *http.Request) {
 	featureID, err := getQueryParam(r, "feature_id")
 	if err != nil {
@@ -169,6 +183,20 @@ func (bh *BannerHandler) GetBanners(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// CreateBanner godoc
+//
+//	@Summary		Создать баннер
+//	@Description	Создать баннер в таблице banners и добавить связи в banner-tag
+//	@ID				create-banner
+//	@Tags			banners
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	    {object} 	dto.CreateOrUpdateBannerResponseDto	"Created"
+//	@Failure		400	    {object}	dto.ErrorDto						"Некорректные данные"
+//	@Failure		401	    {object}										"Пользователь не авторизован"
+//	@Failure		403	    {object}										"Пользователь не имеет доступа"
+//	@Failure		500	    {object}	dto.ErrorDto						"Внутренняя ошибка сервера"
+//	@Router			/banner [post]
 func (bh *BannerHandler) CreateBanner(w http.ResponseWriter, r *http.Request) {
 	var banner dto.CreateOrUpdateBannerRequestDto
 
@@ -229,6 +257,21 @@ func (bh *BannerHandler) CreateBanner(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// UpdateBanner godoc
+//
+//	@Summary		Изменить баннер
+//	@Description	Изменить баннер в таблице banners и изменить связи в banner-tag
+//	@ID				update-banner
+//	@Tags			banners
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	    {object} 	dto.CreateOrUpdateBannerResponseDto	"OK"
+//	@Failure		400	    {object}	dto.ErrorDto						"Некорректные данные"
+//	@Failure		401	    {object}										"Пользователь не авторизован"
+//	@Failure		403	    {object}										"Пользователь не имеет доступа"
+//	@Failure		404	    {object}	dto.ErrorDto						"Баннер не найден"
+//	@Failure		500	    {object}	dto.ErrorDto						"Внутренняя ошибка сервера"
+//	@Router			/banner/{id} [patch]
 func (bh *BannerHandler) UpdateBanner(w http.ResponseWriter, r *http.Request) {
 	var banner dto.CreateOrUpdateBannerRequestDto
 
@@ -309,6 +352,21 @@ func (bh *BannerHandler) UpdateBanner(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// DeleteBanner godoc
+//
+//	@Summary		Удалить баннер
+//	@Description	Удалить баннер в таблице banners и удалить связи в banner-tag
+//	@ID				delete-banner
+//	@Tags			banners
+//	@Accept			json
+//	@Produce		json
+//	@Success		204	    {object} 							"Баннер успешно удален"
+//	@Failure		400	    {object}	dto.ErrorDto			"Некорректные данные"
+//	@Failure		401	    {object}							"Пользователь не авторизован"
+//	@Failure		403	    {object}							"Пользователь не имеет доступа"
+//	@Failure		404	    {object}	dto.ErrorDto			"Баннер для тега не найден"
+//	@Failure		500	    {object}	dto.ErrorDto			"Внутренняя ошибка сервера"
+//	@Router			/banner/{id} [delete]
 func (bh *BannerHandler) DeleteBanner(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	claims := ctx.Value("props").(jwt.MapClaims)
@@ -358,6 +416,21 @@ func (bh *BannerHandler) DeleteBanner(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// GetUserBanner godoc
+//
+//	@Summary		Получение баннера для пользователя
+//	@Description	Получить баннер по фиче и тегу
+//	@ID				get-banner-by-feature-and-tag
+//	@Tags			banner
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	    {object} 	dto.GetUserBannerResponseDto	"Баннер пользователя"
+//	@Failure		400	    {object}	dto.ErrorDto					"Некорректные данные"
+//	@Failure		401	    {object}									"Пользователь не авторизован"
+//	@Failure		403	    {object}									"Пользователь не имеет доступа"
+//	@Failure		404	    {object}	dto.ErrorDto					"Баннер для пользователя не найден"
+//	@Failure		500	    {object}	dto.ErrorDto					"Внутренняя ошибка сервера"
+//	@Router			/banner [get]
 func (bh *BannerHandler) GetUserBanner(w http.ResponseWriter, r *http.Request) {
 	featureID, err := getQueryParam(r, "feature_id")
 	if err != nil {

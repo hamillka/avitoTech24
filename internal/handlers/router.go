@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func Router(bs IBannerService, logger *zap.SugaredLogger) *mux.Router {
+func Router(bs BannerService, logger *zap.SugaredLogger) *mux.Router {
 	router := mux.NewRouter()
 	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
